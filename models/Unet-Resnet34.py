@@ -31,8 +31,8 @@ preprocess_input = sm.get_preprocessing(BACKBONE)
 SIZE_X = 3008 #Resize images (height  = X, width = Y)
 SIZE_Y = 640
 
-image_directory = './Dataset/augmented_new/images/'
-mask_directory = './Dataset/augmented_new/masks/'
+image_directory = '../Dataset/augmented_new/images/'
+mask_directory = '../Dataset/augmented_new/masks/'
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
