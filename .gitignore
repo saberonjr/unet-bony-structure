@@ -125,6 +125,7 @@ celerybeat.pid
 Dataset/augmented/
 Dataset/augmented_new/
 Dataset/augmented2/
+Dataset/augmented_small/
 Results/
 
 # Environments

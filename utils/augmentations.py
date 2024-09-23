@@ -7,8 +7,8 @@ images_to_generate=1000
 
 images_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/images/"
 masks_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/masks/"
-image_augmented_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images/"
-mask_augmented_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks/"
+image_augmented_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/images/"
+mask_augmented_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/masks/"
 
 images = []
 masks = []
@@ -41,8 +41,8 @@ print(f"Number of images: {len(images)}")
 print(f"Number of masks: {len(masks)}")
 
 
-target_height = 3008
-target_width = 640
+target_height = 256 # 3008
+target_width = 64 # 640
 
 aug = A.Compose([
     A.Resize(height=target_height, width=target_width, p=1),

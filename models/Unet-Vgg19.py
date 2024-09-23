@@ -9,6 +9,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+import sys
+import os
+
+# Add the root directory (project_folder) to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from predictions.predict import segment_and_save_results
 
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
@@ -23,7 +30,7 @@ results_folder = f'./Results/{sub_folder_name}/{current_time}'
 os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
 
-BACKBONE = 'vgg19'
+BACKBONE = 'vgg19'  
 preprocess_input = sm.get_preprocessing(BACKBONE)
 
 
@@ -31,8 +38,8 @@ preprocess_input = sm.get_preprocessing(BACKBONE)
 SIZE_X = 3008 #Resize images (height  = X, width = Y)
 SIZE_Y = 640
 
-image_directory = './Dataset/augmented/images/'
-mask_directory = './Dataset/augmented/masks/'
+image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
+mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
@@ -108,23 +115,9 @@ metrics = [
 # Define and compile U-Net model
 model = sm.Unet(BACKBONE, encoder_weights='imagenet')
 model.compile(optimizer='adam', loss=total_loss, metrics=metrics)
-####
-
-# define model
-#model = sm.Unet(BACKBONE, encoder_weights='imagenet', )
-#model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['mse'])
 
 print(model.summary())
 
-"""
-history=model.fit(x_train, 
-          y_train,
-          batch_size=4, 
-          epochs=1, #5
-          verbose=1,
-          validation_data=(x_val, y_val))
-
-"""
 # Define callbacks for ModelCheckpoint and EarlyStopping
 checkpoint_path = os.path.join(results_folder, 'best_model.keras')
 
@@ -142,8 +135,8 @@ early_stopping = EarlyStopping(monitor='val_loss',  # Monitor validation loss
 # Train the model with callbacks
 history = model.fit(x_train,
                     y_train,
-                    batch_size=4,
-                    epochs=10,  # Increased epochs to allow early stopping
+                    batch_size=8,
+                    epochs=5,  # Increased epochs to allow early stopping
                     verbose=1,
                     validation_data=(x_val, y_val),
                     callbacks=[checkpoint, early_stopping])  # Add callbacks here
@@ -153,25 +146,6 @@ model_save_path = os.path.join(results_folder, 'scoliosis.keras')
 model.save(model_save_path)
 print(f"Model saved to {model_save_path}")
 
-
-#model.save('scoliosis.keras') # creates a HDF5 file 'my_model.h5'
-
-"""
-#accuracy = model.evaluate(x_val, y_val)
-#plot the training and validation accuracy and loss at each epoch
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-epochs = range(1, len(loss) + 1)
-plt.plot(epochs, loss, 'y', label='Training loss')
-plt.plot(epochs, val_loss, 'r', label='Validation loss')
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
-
-model.save('scoliosis.keras') # creates a HDF5 file 'my_model.h5'
-"""
 # Plot training history
 def plot_training_history(history):
     # Plot training & validation loss values
@@ -215,3 +189,7 @@ with open(history_save_path, 'w') as f:
     for key in history.history.keys():
         f.write(f"{key}: {history.history[key]}\n")
 print(f"Training history saved to {history_save_path}")
+
+
+# Call the function with the save path
+segment_and_save_results(results_folder)

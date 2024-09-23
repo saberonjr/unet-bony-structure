@@ -35,11 +35,13 @@ preprocess_input = sm.get_preprocessing(BACKBONE)
 
 
 #Resizing images is optional, CNNs are ok with large images
-SIZE_X = 3008 #Resize images (height  = X, width = Y)
-SIZE_Y = 640
+SIZE_X = 256 # 3008 #Resize images (height  = X, width = Y)
+SIZE_Y = 64 # 640
 
-image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
-mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
+#image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
+#mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
+image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/images'
+mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/masks'
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
@@ -115,23 +117,9 @@ metrics = [
 # Define and compile U-Net model
 model = sm.Unet(BACKBONE, encoder_weights='imagenet')
 model.compile(optimizer='adam', loss=total_loss, metrics=metrics)
-####
-
-# define model
-#model = sm.Unet(BACKBONE, encoder_weights='imagenet', )
-#model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['mse'])
 
 print(model.summary())
 
-"""
-history=model.fit(x_train, 
-          y_train,
-          batch_size=4, 
-          epochs=1, #5
-          verbose=1,
-          validation_data=(x_val, y_val))
-
-"""
 # Define callbacks for ModelCheckpoint and EarlyStopping
 checkpoint_path = os.path.join(results_folder, 'best_model.keras')
 
@@ -150,7 +138,7 @@ early_stopping = EarlyStopping(monitor='val_loss',  # Monitor validation loss
 history = model.fit(x_train,
                     y_train,
                     batch_size=8,
-                    epochs=5,  # Increased epochs to allow early stopping
+                    epochs=50,  # Increased epochs to allow early stopping
                     verbose=1,
                     validation_data=(x_val, y_val),
                     callbacks=[checkpoint, early_stopping])  # Add callbacks here

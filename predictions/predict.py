@@ -9,14 +9,14 @@ import numpy as np
 import segmentation_models as sm
 import matplotlib.patches as mpatches  # For creating custom legends
 
-def segment_and_save_results(save_path):
+def segment_and_save_results(save_path, save_images=True):
     # Adjust SIZE_X and SIZE_Y to match the input shape your U-Net model was trained on
     SIZE_X = 640   # Width that the model expects
     SIZE_Y = 3008  # Height that the model expects
 
     # Load the pre-trained model
-    model = keras.models.load_model('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_09-05-08/best_model.keras', compile=False)
-
+    #model = keras.models.load_model('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46/best_model.keras', compile=False)
+    model = keras.models.load_model(f'{save_path}/best_model.keras', compile=False)
     # Compile the model with the same loss and metrics used during training
     dice_loss = sm.losses.DiceLoss()
     jaccard_loss = sm.losses.JaccardLoss()
@@ -110,10 +110,11 @@ def segment_and_save_results(save_path):
     plt.show()
 
     # Save the images to the provided directory
-    plt.imsave(os.path.join(save_path, 'original_image.jpg'), test_img)
-    plt.imsave(os.path.join(save_path, 'original_mask.jpg'), original_mask, cmap='gray')
-    plt.imsave(os.path.join(save_path, 'predicted_mask.jpg'), predicted_mask, cmap='gray')
-    plt.imsave(os.path.join(save_path, 'overlay_image.jpg'), overlay_image)
+    if save_images:
+        plt.imsave(os.path.join(save_path, 'original_image.jpg'), test_img)
+        plt.imsave(os.path.join(save_path, 'original_mask.jpg'), original_mask, cmap='gray')
+        plt.imsave(os.path.join(save_path, 'predicted_mask.jpg'), predicted_mask, cmap='gray')
+        plt.imsave(os.path.join(save_path, 'overlay_image.jpg'), overlay_image)
 
     # Evaluate the model on the test image and mask
     test_img_expanded = test_img_expanded.astype('float32')
@@ -125,25 +126,29 @@ def segment_and_save_results(save_path):
     # Assuming the model was compiled with IoU and F-Score as metrics
     metrics_names = model.metrics_names[1:]  # Exclude 'loss' from metrics names
 
-    # Plot loss and metrics for the test data
-    plt.figure(figsize=(12, 6))
-
     # Plot the loss
-    plt.subplot(1, 2, 1)
+    plt.figure(figsize=(6, 6))
     plt.bar(['Test Loss'], [test_loss])
     plt.title('Test Loss')
-
-    # Plot the metrics (IoU, F-Score)
-    plt.subplot(1, 2, 2)
-    plt.bar(metrics_names, test_metrics)
-    plt.title('Test Metrics (IoU & F-Score)')
-
     plt.tight_layout()
 
-    # Save the figure to a file in the provided directory
-    plt.savefig(os.path.join(save_path, 'test_loss_and_metrics.png'))  # Save metrics and loss plot
+    # Save the loss figure to a file in the provided directory
+    if save_images:
+        plt.savefig(os.path.join(save_path, 'test_loss.png'))  # Save loss plot
     plt.show()
 
+    # Separate IoU and F-Score and plot them individually
+    for metric_name, metric_value in zip(metrics_names, test_metrics):
+        plt.figure(figsize=(6, 6))
+        plt.bar([metric_name], [metric_value])
+        plt.title(f'Test {metric_name}')
+        plt.tight_layout()
+
+        # Save each metric figure individually
+        if save_images:
+            plt.savefig(os.path.join(save_path, f'test_{metric_name.lower()}.png'))  # Save each metric plot
+        plt.show()
+        
 
 if __name__ == '__main__':
-    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_09-05-08')
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46')
