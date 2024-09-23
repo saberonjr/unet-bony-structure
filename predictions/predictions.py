@@ -1,3 +1,5 @@
+
+
 import os
 os.environ["SM_FRAMEWORK"] = "tf.keras"
 from tensorflow import keras
@@ -107,11 +109,11 @@ def segment_and_save_results(save_path):
     plt.tight_layout()
     plt.show()
 
-    # Optionally save the images
-    plt.imsave('./Results/original_image.jpg', test_img)
-    plt.imsave('./Results/original_mask.jpg', original_mask, cmap='gray')
-    plt.imsave('./Results/predicted_mask.jpg', predicted_mask, cmap='gray')
-    plt.imsave('./Results/overlay_image.jpg', overlay_image)
+    # Save the images to the provided directory
+    plt.imsave(os.path.join(save_path, 'original_image.jpg'), test_img)
+    plt.imsave(os.path.join(save_path, 'original_mask.jpg'), original_mask, cmap='gray')
+    plt.imsave(os.path.join(save_path, 'predicted_mask.jpg'), predicted_mask, cmap='gray')
+    plt.imsave(os.path.join(save_path, 'overlay_image.jpg'), overlay_image)
 
     # Evaluate the model on the test image and mask
     test_img_expanded = test_img_expanded.astype('float32')
@@ -138,9 +140,8 @@ def segment_and_save_results(save_path):
 
     plt.tight_layout()
 
-    # Save the figure to a file
-    plt.savefig('./Results/test_loss_and_metrics.png')  # You can specify the file format and path
-
+    # Save the figure to a file in the provided directory
+    plt.savefig(os.path.join(save_path, 'test_loss_and_metrics.png'))  # Save metrics and loss plot
     plt.show()
 
 

@@ -9,6 +9,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from segmentation_utils import segment_and_save_results
+
 
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
@@ -215,3 +217,7 @@ with open(history_save_path, 'w') as f:
     for key in history.history.keys():
         f.write(f"{key}: {history.history[key]}\n")
 print(f"Training history saved to {history_save_path}")
+
+
+# Call the function with the save path
+segment_and_save_results(results_folder)
