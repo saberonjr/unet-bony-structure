@@ -145,4 +145,5 @@ def segment_and_save_results(save_path):
     plt.show()
 
 
-segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_09-05-08')
+if __name__ == '__main__':
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_09-05-08')

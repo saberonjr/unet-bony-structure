@@ -9,8 +9,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-from segmentation_utils import segment_and_save_results
+import sys
+import os
 
+# Add the root directory (project_folder) to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from predictions.predict import segment_and_save_results
 
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
@@ -33,8 +38,8 @@ preprocess_input = sm.get_preprocessing(BACKBONE)
 SIZE_X = 3008 #Resize images (height  = X, width = Y)
 SIZE_Y = 640
 
-image_directory = '../Dataset/augmented_new/images/'
-mask_directory = '../Dataset/augmented_new/masks/'
+image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
+mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
@@ -145,7 +150,7 @@ early_stopping = EarlyStopping(monitor='val_loss',  # Monitor validation loss
 history = model.fit(x_train,
                     y_train,
                     batch_size=8,
-                    epochs=1,  # Increased epochs to allow early stopping
+                    epochs=5,  # Increased epochs to allow early stopping
                     verbose=1,
                     validation_data=(x_val, y_val),
                     callbacks=[checkpoint, early_stopping])  # Add callbacks here
@@ -155,25 +160,6 @@ model_save_path = os.path.join(results_folder, 'scoliosis.keras')
 model.save(model_save_path)
 print(f"Model saved to {model_save_path}")
 
-
-#model.save('scoliosis.keras') # creates a HDF5 file 'my_model.h5'
-
-"""
-#accuracy = model.evaluate(x_val, y_val)
-#plot the training and validation accuracy and loss at each epoch
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-epochs = range(1, len(loss) + 1)
-plt.plot(epochs, loss, 'y', label='Training loss')
-plt.plot(epochs, val_loss, 'r', label='Validation loss')
-plt.title('Training and validation loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
-
-model.save('scoliosis.keras') # creates a HDF5 file 'my_model.h5'
-"""
 # Plot training history
 def plot_training_history(history):
     # Plot training & validation loss values
