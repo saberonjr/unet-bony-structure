@@ -35,8 +35,8 @@ preprocess_input = sm.get_preprocessing(BACKBONE)
 
 
 #Resizing images is optional, CNNs are ok with large images
-SIZE_X = 256 # 3008 #Resize images (height  = X, width = Y)
-SIZE_Y = 64 # 640
+SIZE_X = 320 #1280 # 3008 #Resize images (height  = X, width = Y)
+SIZE_Y = 64 #320 # 640
 
 #image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
 #mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
@@ -108,11 +108,13 @@ focal_loss = sm.losses.BinaryFocalLoss()
 # Custom loss: Combine Focal, Jaccard, and Dice losses
 total_loss = dice_loss + jaccard_loss + focal_loss
 
-# Metrics
+# Metrics (including Dice Score, IoU, and F-Score)
 metrics = [
     sm.metrics.IOUScore(threshold=0.5),   # Intersection over Union (IoU)
-    sm.metrics.FScore(threshold=0.5)      # F-Score
+    sm.metrics.FScore(threshold=0.5,beta=2),     # F-Score (beta=1, F1-score)
+    #sm.metrics.DiceScore(threshold=0.5)   # Dice Score
 ]
+
 
 # Define and compile U-Net model
 model = sm.Unet(BACKBONE, encoder_weights='imagenet')

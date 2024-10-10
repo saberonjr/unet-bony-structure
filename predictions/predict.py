@@ -11,8 +11,8 @@ import matplotlib.patches as mpatches  # For creating custom legends
 
 def segment_and_save_results(save_path, save_images=True):
     # Adjust SIZE_X and SIZE_Y to match the input shape your U-Net model was trained on
-    SIZE_X = 640   # Width that the model expects
-    SIZE_Y = 3008  # Height that the model expects
+    SIZE_X = 640 # 64 #320 # 640   # Width that the model expects
+    SIZE_Y = 3008 # 360 #1280 # 3008  # Height that the model expects
 
     # Load the pre-trained model
     #model = keras.models.load_model('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46/best_model.keras', compile=False)
@@ -28,7 +28,7 @@ def segment_and_save_results(save_path, save_images=True):
     # Metrics
     metrics = [
         sm.metrics.IOUScore(threshold=0.5),   # Intersection over Union (IoU)
-        sm.metrics.FScore(threshold=0.5)      # F-Score
+        sm.metrics.FScore(threshold=0.5, beta=2)      # F-Score
     ]
 
     # Recompile the loaded model with the loss and metrics
