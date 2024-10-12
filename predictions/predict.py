@@ -9,10 +9,10 @@ import numpy as np
 import segmentation_models as sm
 import matplotlib.patches as mpatches  # For creating custom legends
 
-def segment_and_save_results(save_path, save_images=True):
+def segment_and_save_results(save_path, target_width, target_height, test_image, test_mask, save_images=True):
     # Adjust SIZE_X and SIZE_Y to match the input shape your U-Net model was trained on
-    SIZE_X = 640 # 64 #320 # 640   # Width that the model expects
-    SIZE_Y = 3008 # 360 #1280 # 3008  # Height that the model expects
+    SIZE_X = target_width #640 # 64 #320 # 640   # Width that the model expects
+    SIZE_Y = target_height #3008 # 360 #1280 # 3008  # Height that the model expects
 
     # Load the pre-trained model
     #model = keras.models.load_model('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46/best_model.keras', compile=False)
@@ -36,14 +36,14 @@ def segment_and_save_results(save_path, save_images=True):
 
     # Test on a new image
     # Load and preprocess the test image
-    test_img_path = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp'
+    test_img_path = test_image # '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp'
     test_img = cv2.imread(test_img_path, cv2.IMREAD_COLOR)
     original_image = cv2.resize(test_img, (SIZE_X, SIZE_Y))  # Resize to match model's input size
 
     test_img = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
 
     # Load the original ground truth mask
-    mask_path = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png'
+    mask_path =  test_mask # '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png'
     original_mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     original_mask = cv2.resize(original_mask, (SIZE_X, SIZE_Y))
 
@@ -151,4 +151,21 @@ def segment_and_save_results(save_path, save_images=True):
         
 
 if __name__ == '__main__':
-    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46')
+    """
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46',
+                             320, 1280, 
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+                        True)
+    """
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-10-11_10-34-23b',
+                             640, 3008, 
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114820160113005P5.bmp',
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114820160113005P5.png',
+                        True)
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-10-11_10-34-23c',
+                             640, 3008, 
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200116320160115006P4.bmp',
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200116320160115006P4.png',
+                        True)
+    

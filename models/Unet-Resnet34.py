@@ -17,6 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from predictions.predict import segment_and_save_results
 
+
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
 sub_folder_name = os.path.splitext(current_file_name)[0]
@@ -33,15 +34,17 @@ os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't ex
 BACKBONE = 'resnet34'
 preprocess_input = sm.get_preprocessing(BACKBONE)
 
+target_width = 640
+target_height = 3008
 
 #Resizing images is optional, CNNs are ok with large images
-SIZE_X = 320 #1280 # 3008 #Resize images (height  = X, width = Y)
-SIZE_Y = 64 #320 # 640
+SIZE_X = target_width #320 #1280 # 3008 #Resize images (height  = X, width = Y)
+SIZE_Y = target_height  #64 #320 # 640
 
 #image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
 #mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
-image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/images'
-mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/masks'
+image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_large/images'
+mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_large/masks'
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
@@ -140,7 +143,7 @@ early_stopping = EarlyStopping(monitor='val_loss',  # Monitor validation loss
 history = model.fit(x_train,
                     y_train,
                     batch_size=8,
-                    epochs=50,  # Increased epochs to allow early stopping
+                    epochs=10,  # Increased epochs to allow early stopping
                     verbose=1,
                     validation_data=(x_val, y_val),
                     callbacks=[checkpoint, early_stopping])  # Add callbacks here
@@ -196,4 +199,7 @@ print(f"Training history saved to {history_save_path}")
 
 
 # Call the function with the save path
-segment_and_save_results(results_folder)
+segment_and_save_results(results_folder, target_width, target_height,
+                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
+                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+                        save_images=True)
