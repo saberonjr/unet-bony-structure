@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from predictions.predict import segment_and_save_results
 
 # Define the plain U-Net architecture
-def unet(input_size=(320, 64, 3)):
+def unet(input_size=(640, 3008, 3)):
     inputs = layers.Input(input_size)
 
     # Encoder: Contracting Path

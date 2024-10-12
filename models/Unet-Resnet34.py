@@ -16,6 +16,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from predictions.predict import segment_and_save_results
+from predictions.history import plot_training_history
+from predictions.splitdataset import split_scoliosis_dataset
 
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
@@ -29,23 +31,24 @@ current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 results_folder = f'./Results/{sub_folder_name}/{current_time}'
 os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
+# Define paths
+#IMAGE_DIR = './Dataset/augmented_large/images/'
+#MASK_DIR = './Dataset/augmented_large/masks/'
+IMAGE_DIR = './Dataset/augmented_small/images/'
+MASK_DIR = './Dataset/augmented_small/masks/'
+IMAGE_HEIGHT =3008 # 320 #3008
+IMAGE_WIDTH = 640 # 64 #640
+BATCH_SIZE = 8  
+TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
+EPOCHS = 20
 
 BACKBONE = 'resnet34'
 preprocess_input = sm.get_preprocessing(BACKBONE)
 
 
-#Resizing images is optional, CNNs are ok with large images
-SIZE_X = 320 #1280 # 3008 #Resize images (height  = X, width = Y)
-SIZE_Y = 64 #320 # 640
-
-#image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/images'
-#mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_new/masks'
-image_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/images'
-mask_directory = '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/augmented_small/masks'
-
 # Capture image and mask info
-image_paths = sorted(glob.glob(os.path.join(image_directory, "*.png")))  # Sort to maintain order
-mask_paths = sorted(glob.glob(os.path.join(mask_directory, "*.png")))    # Sort to maintain order
+image_paths = sorted(glob.glob(os.path.join(IMAGE_DIR, "*.png")))  # Sort to maintain order
+mask_paths = sorted(glob.glob(os.path.join(MASK_DIR, "*.png")))    # Sort to maintain order
 
 # Ensure the number of images matches the number of masks
 assert len(image_paths) == len(mask_paths), "Mismatch between number of images and masks"
@@ -132,15 +135,15 @@ checkpoint = ModelCheckpoint(filepath=checkpoint_path,
                              mode='min')  # 'min' because we want to minimize loss
 
 early_stopping = EarlyStopping(monitor='val_loss',  # Monitor validation loss
-                               patience=10,  # Stop after 10 epochs of no improvement
+                               patience=5,  # Stop after 10 epochs of no improvement
                                verbose=1,
                                restore_best_weights=True)  # Restore the best weights at the end
 
 # Train the model with callbacks
 history = model.fit(x_train,
                     y_train,
-                    batch_size=8,
-                    epochs=50,  # Increased epochs to allow early stopping
+                    batch_size=BATCH_SIZE,
+                    epochs=EPOCHS,  # Increased epochs to allow early stopping
                     verbose=1,
                     validation_data=(x_val, y_val),
                     callbacks=[checkpoint, early_stopping])  # Add callbacks here
@@ -151,49 +154,10 @@ model.save(model_save_path)
 print(f"Model saved to {model_save_path}")
 
 # Plot training history
-def plot_training_history(history):
-    # Plot training & validation loss values
-    plt.figure(figsize=(12, 6))
-
-    # Loss
-    plt.subplot(1, 2, 1)
-    plt.plot(history.history['loss'], label='Training Loss')
-    plt.plot(history.history['val_loss'], label='Validation Loss')
-    plt.title('Model Loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(loc='upper right')
-
-    # Metrics (IoU and F-Score in this case)
-    plt.subplot(1, 2, 2)
-    if 'iou_score' in history.history:
-        plt.plot(history.history['iou_score'], label='Training IoU')
-        plt.plot(history.history['val_iou_score'], label='Validation IoU')
-    if 'f1-score' in history.history:
-        plt.plot(history.history['f1-score'], label='Training F-Score')
-        plt.plot(history.history['val_f1-score'], label='Validation F-Score')
-    plt.title('Metrics (IoU / F-Score)')
-    plt.ylabel('Score')
-    plt.xlabel('Epoch')
-    plt.legend(loc='lower right')
-
-    plt.tight_layout()
-    # Save the plot to the results folder
-    plot_save_path = os.path.join(results_folder, 'training_history.png')
-    plt.savefig(plot_save_path)
-    plt.show()
-    print(f"Training history plot saved to {plot_save_path}")
-
-# Assuming you have the history object after training your model
-plot_training_history(history)
-
-# Optionally save the training logs (history) to a text file
-history_save_path = os.path.join(results_folder, 'training_history.txt')
-with open(history_save_path, 'w') as f:
-    for key in history.history.keys():
-        f.write(f"{key}: {history.history[key]}\n")
-print(f"Training history saved to {history_save_path}")
-
+plot_training_history(history, results_folder)
 
 # Call the function with the save path
-segment_and_save_results(results_folder)
+segment_and_save_results(results_folder, IMAGE_WIDTH, IMAGE_HEIGHT,
+                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
+                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+                        save_images=True)

@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+fb/
 # Distribution / packaging
 .Python
 build/
@@ -127,6 +127,7 @@ Dataset/augmented_new/
 Dataset/augmented2/
 Dataset/augmented_small/
 Dataset/augmented_medium
+Dataset/augmented_large
 Results/
 
 # Environments
