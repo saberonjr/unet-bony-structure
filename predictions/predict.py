@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import segmentation_models as sm
+import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches  # For creating custom legends
 
 def segment_and_save_results(save_path, target_width, target_height, test_image, test_mask, save_images=True):
