@@ -21,28 +21,26 @@ from predictions.splitdataset import split_scoliosis_dataset
 # Get only the file name without path and extension
 current_file_name = os.path.basename(__file__)
 sub_folder_name = os.path.splitext(current_file_name)[0]
-
 print(f"Current file name without extension: {sub_folder_name}")
 
-
-# Create a unique folder name based on the current date and time
-current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_folder = f'./Results/{sub_folder_name}/{current_time}'
-os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
-
 # Define paths
-#IMAGE_DIR = './Dataset/augmented_large/images/'
-#MASK_DIR = './Dataset/augmented_large/masks/'
-IMAGE_DIR = './Dataset/augmented_small/images/'
-MASK_DIR = './Dataset/augmented_small/masks/'
-IMAGE_HEIGHT = 320 #3008
-IMAGE_WIDTH =  64 #640
+IMAGE_DIR = './Dataset/augmented_large/images/'
+MASK_DIR = './Dataset/augmented_large/masks/'
+#IMAGE_DIR = './Dataset/augmented_small/images/'
+#MASK_DIR = './Dataset/augmented_small/masks/'
+IMAGE_HEIGHT = 3008 # 320 #3008
+IMAGE_WIDTH =  640 #64 #640
 BATCH_SIZE = 8  
 TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
 EPOCHS = 20
 
-# Albumentations augmentations
+# Create a unique folder name based on the current date and time
+current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+results_folder = f'./Results/{sub_folder_name}/{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-{current_time}'
+os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
+
+# Albumentations augmentations
 augmentation_pipeline = A.Compose([
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
@@ -84,9 +82,9 @@ def load_data(image_path, mask_path, show_info=False):
 
 
     # Apply augmentations
-    augmented = augmentation_pipeline(image=image, mask=mask)
-    image = augmented['image']
-    mask = augmented['mask']
+    #augmented = augmentation_pipeline(image=image, mask=mask)
+    #image = augmented['image']
+    #mask = augmented['mask']
 
     if show_info:
         # Print original dimensions of the image and mask
@@ -224,7 +222,78 @@ def unet_model(input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 3)):
     model = models.Model(inputs=[inputs], outputs=[outputs])
     return model
 
+def unet_model_batch(input_size=(IMAGE_HEIGHT, IMAGE_WIDTH, 3), n_classes=1):
+    inputs = layers.Input(input_size)
 
+    # Encoder
+    c1 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
+    c1 = layers.BatchNormalization()(c1)
+    c1 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(c1)
+    c1 = layers.BatchNormalization()(c1)
+    p1 = layers.MaxPooling2D((2, 2))(c1)
+    p1 = layers.Dropout(0.3)(p1)  # Add dropout to prevent overfitting on noise
+
+    c2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(p1)
+    c2 = layers.BatchNormalization()(c2)
+    c2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(c2)
+    c2 = layers.BatchNormalization()(c2)
+    p2 = layers.MaxPooling2D((2, 2))(c2)
+    p2 = layers.Dropout(0.3)(p2)
+
+    c3 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(p2)
+    c3 = layers.BatchNormalization()(c3)
+    c3 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(c3)
+    c3 = layers.BatchNormalization()(c3)
+    p3 = layers.MaxPooling2D((2, 2))(c3)
+    p3 = layers.Dropout(0.3)(p3)
+
+    c4 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(p3)
+    c4 = layers.BatchNormalization()(c4)
+    c4 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(c4)
+    c4 = layers.BatchNormalization()(c4)
+    p4 = layers.MaxPooling2D((2, 2))(c4)
+    p4 = layers.Dropout(0.3)(p4)
+
+    # Bottleneck
+    c5 = layers.Conv2D(1024, (3, 3), activation='relu', padding='same')(p4)
+    c5 = layers.BatchNormalization()(c5)
+    c5 = layers.Conv2D(1024, (3, 3), activation='relu', padding='same')(c5)
+    c5 = layers.BatchNormalization()(c5)
+    c5 = layers.Dropout(0.3)(c5)
+
+    # Decoder
+    u6 = layers.Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(c5)
+    u6 = layers.concatenate([u6, c4])
+    c6 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(u6)
+    c6 = layers.BatchNormalization()(c6)
+    c6 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(c6)
+    c6 = layers.BatchNormalization()(c6)
+
+    u7 = layers.Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(c6)
+    u7 = layers.concatenate([u7, c3])
+    c7 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(u7)
+    c7 = layers.BatchNormalization()(c7)
+    c7 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(c7)
+    c7 = layers.BatchNormalization()(c7)
+
+    u8 = layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c7)
+    u8 = layers.concatenate([u8, c2])
+    c8 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(u8)
+    c8 = layers.BatchNormalization()(c8)
+    c8 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(c8)
+    c8 = layers.BatchNormalization()(c8)
+
+    u9 = layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c8)
+    u9 = layers.concatenate([u9, c1], axis=3)
+    c9 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(u9)
+    c9 = layers.BatchNormalization()(c9)
+    c9 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(c9)
+    c9 = layers.BatchNormalization()(c9)
+
+    outputs = layers.Conv2D(n_classes, (1, 1), activation='sigmoid')(c9)
+
+    model = models.Model(inputs=[inputs], outputs=[outputs])
+    return model
 # =============================================================================
 #  Add Losses, Metrics, Checkpoints, and Early Stopping
 
@@ -237,11 +306,10 @@ total_loss = dice_loss + jaccard_loss + focal_loss
 metrics = [sm.metrics.IOUScore(threshold=0.5), sm.metrics.FScore(threshold=0.5)]
 
 # Create U-Net model
-model = unet_model()
+model = unet_model_batch()
 
 # Compile the model with the loss and metrics
 model.compile(optimizer='adam', loss=total_loss, metrics=metrics)
-
 model.summary()
 
 # Define callbacks for ModelCheckpoint and EarlyStopping
