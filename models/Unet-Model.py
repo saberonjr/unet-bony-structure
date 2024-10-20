@@ -28,24 +28,27 @@ IMAGE_DIR = './Dataset/augmented_large/images/'
 MASK_DIR = './Dataset/augmented_large/masks/'
 #IMAGE_DIR = './Dataset/augmented_small/images/'
 #MASK_DIR = './Dataset/augmented_small/masks/'
-IMAGE_HEIGHT = 3008 # 320 #3008
-IMAGE_WIDTH =  640 #64 #640
-BATCH_SIZE = 8  
+IMAGE_HEIGHT =   3008 # 320 #3008
+IMAGE_WIDTH = 640 # 64 #640
+BATCH_SIZE = 2
 TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
-EPOCHS = 20
+EPOCHS = 100
 
 # Create a unique folder name based on the current date and time
 current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_folder = f'./Results/{sub_folder_name}/{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-{current_time}'
+results_folder = f'./Results/{sub_folder_name}/BATCH{BATCH_SIZE}-{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-{current_time}'
 os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
 
 # Albumentations augmentations
 augmentation_pipeline = A.Compose([
-    A.HorizontalFlip(p=0.5),
-    A.VerticalFlip(p=0.5),
-    A.Rotate(limit=30, p=0.5),
-    A.ElasticTransform(p=0.5),
+    #A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+   #A.HorizontalFlip(p=0.5),
+    #A.VerticalFlip(p=0.5),
+    #A.Rotate(limit=30, p=0.5),
+    #A.ElasticTransform(p=0.5),
+    A.GridDistortion(num_steps=5, distort_limit=0.05, p=0.3),
+    A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
     A.RandomBrightnessContrast(p=0.5),
     A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH)  # Ensures that the dimensions remain the same
 ])
@@ -82,9 +85,9 @@ def load_data(image_path, mask_path, show_info=False):
 
 
     # Apply augmentations
-    #augmented = augmentation_pipeline(image=image, mask=mask)
-    #image = augmented['image']
-    #mask = augmented['mask']
+    augmented = augmentation_pipeline(image=image, mask=mask)
+    image = augmented['image']
+    mask = augmented['mask']
 
     if show_info:
         # Print original dimensions of the image and mask
@@ -157,7 +160,7 @@ def create_dataset(image_dir, mask_dir, batch_size=8):
     return dataset
 
 # Create train and validation datasets
-train_dataset = create_dataset(IMAGE_DIR, MASK_DIR, batch_size=8)
+train_dataset = create_dataset(IMAGE_DIR, MASK_DIR, batch_size=BATCH_SIZE)
 
 train_dataset_split, val_dataset_split = split_scoliosis_dataset(train_dataset, test_size=0.2, batch_size=BATCH_SIZE)
 

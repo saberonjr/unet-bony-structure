@@ -159,6 +159,7 @@ if __name__ == '__main__':
                              '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
                         True)
     """
+    '''
     segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-10-11_10-34-23b',
                              640, 3008, 
                              '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114820160113005P5.bmp',
@@ -169,4 +170,12 @@ if __name__ == '__main__':
                              '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200116320160115006P4.bmp',
                              '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200116320160115006P4.png',
                         True)
+    '''
+    
+    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Model/BATCH8-320hx64w-2024-10-12_19-50-36-5Over100',
+                             64, 320, 
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200116320160115006P4.bmp',
+                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200116320160115006P4.png',
+                        True)
+    
     
