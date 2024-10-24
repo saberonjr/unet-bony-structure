@@ -11,6 +11,14 @@ from tensorflow.keras import layers, models
 import segmentation_models as sm
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
+# Check if GPU is available and print details
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+if len(tf.config.experimental.list_physical_devices('GPU')) > 0:
+    print("TensorFlow is utilizing the GPU.")
+    # Optional: Limit GPU memory growth
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
+        
 # Add the root directory (project_folder) to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
