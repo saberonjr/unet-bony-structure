@@ -30,13 +30,13 @@ MASK_DIR = './Dataset/augmented_large/masks/'
 #MASK_DIR = './Dataset/augmented_small/masks/'
 IMAGE_HEIGHT =   3008 # 320 #3008
 IMAGE_WIDTH = 640 # 64 #640
-BATCH_SIZE = 2
+BATCH_SIZE = 4 # #8 #32
 TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
 EPOCHS = 100
 
 # Create a unique folder name based on the current date and time
 current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_folder = f'./Results/{sub_folder_name}/BATCH{BATCH_SIZE}-{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-{current_time}'
+results_folder = f'./Results/{sub_folder_name}/BATCH{BATCH_SIZE}-{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-EPOCHS{EPOCHS}-{current_time}'
 os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
 
@@ -304,10 +304,18 @@ def unet_model_batch(input_size=(IMAGE_HEIGHT, IMAGE_WIDTH, 3), n_classes=1):
 dice_loss = sm.losses.DiceLoss()
 jaccard_loss = sm.losses.JaccardLoss()
 focal_loss = sm.losses.binary_focal_loss
-total_loss = dice_loss + jaccard_loss + focal_loss
+#total_loss = dice_loss + jaccard_loss + focal_loss
+total_loss = sm.losses.bce_dice_loss
 
-metrics = [sm.metrics.IOUScore(threshold=0.5), sm.metrics.FScore(threshold=0.5)]
-
+metrics = [sm.metrics.IOUScore(threshold=0.5), sm.metrics.FScore(threshold=0.5,beta=2)]
+metrics =[    
+    sm.metrics.IOUScore(threshold=0.5),   # Intersection over Union (IoU)
+    #sm.metrics.FScore(threshold=0.5,beta=2),     # F-Score (beta=1, F1-score)
+    sm.metrics.f1_score,
+    sm.metrics.f2_score,
+    sm.metrics.precision,
+    sm.metrics.recall
+]
 # Create U-Net model
 model = unet_model_batch()
 
@@ -345,8 +353,20 @@ print(f"Model saved to {model_save_path}")
 plot_training_history(history, results_folder)
 
 # Call the function with the save path
+#segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+#                         test_image= './Dataset/test/images/PWH00200114920160113006P5.bmp',
+#                        test_mask='./Dataset/test/masks/PWH00200114920160113006P5.png',
+#                        save_images=True)
 segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
-                         test_image= './Dataset/test/images/PWH00200114920160113006P5.bmp',
-                        test_mask='./Dataset/test/masks/PWH00200114920160113006P5.png',
+                        test_image=f'./Dataset/test/images/PWH00200114920160113006P5.bmp',
+                        test_mask=f'./Dataset/test/masks/PWH00200114920160113006P5.png',
                         save_images=True)
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                        test_image=f'./Dataset/test/images/PWH00200114820160113005P5.bmp',
+                        test_mask=f'./Dataset/test/masks/PWH00200114820160113005P5.png',
+                        save_images=True)
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                    test_image=f'./Dataset/test/images/PWH00200116320160115006P4.bmp',
+                    test_mask=f'./Dataset/test/masks/PWH00200116320160115006P4.png',
+                    save_images=True)
                    

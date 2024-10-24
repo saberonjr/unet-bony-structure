@@ -6,11 +6,20 @@ import segmentation_models as sm
 import glob
 import cv2
 import numpy as np
+import albumentations as A
 from matplotlib import pyplot as plt
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 import sys
 import os
+
+# Check if GPU is available and print details
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+if len(tf.config.experimental.list_physical_devices('GPU')) > 0:
+    print("TensorFlow is utilizing the GPU.")
+    # Optional: Limit GPU memory growth
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
 
 # Add the root directory (project_folder) to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -25,26 +34,38 @@ sub_folder_name = os.path.splitext(current_file_name)[0]
 
 print(f"Current file name without extension: {sub_folder_name}")
 
+# Define paths
+IMAGE_DIR = './Dataset/augmented_large/images/'
+MASK_DIR = './Dataset/augmented_large/masks/'
+#IMAGE_DIR = './Dataset/augmented_small/images/'
+#MASK_DIR = './Dataset/augmented_small/masks/'
+IMAGE_HEIGHT = 3008 # 320 #3008
+IMAGE_WIDTH =  640 # 64 #640
+BATCH_SIZE = 4 # 32 #8  
+TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
+EPOCHS =  100
 
 # Create a unique folder name based on the current date and time
 current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-results_folder = f'./Results/{sub_folder_name}/{current_time}'
+results_folder = f'./Results/{sub_folder_name}/BATCH{BATCH_SIZE}-{IMAGE_HEIGHT}Hx{IMAGE_WIDTH}W-EPOCHS{EPOCHS}-{current_time}'
 os.makedirs(results_folder, exist_ok=True)  # Create the folder if it doesn't exist
 
-# Define paths
-#IMAGE_DIR = './Dataset/augmented_large/images/'
-#MASK_DIR = './Dataset/augmented_large/masks/'
-IMAGE_DIR = './Dataset/augmented_small/images/'
-MASK_DIR = './Dataset/augmented_small/masks/'
-IMAGE_HEIGHT =3008 # 320 #3008
-IMAGE_WIDTH = 640 # 64 #640
-BATCH_SIZE = 8  
-TRAIN_LENGTH = len(os.listdir(IMAGE_DIR))
-EPOCHS = 20
+
 
 BACKBONE = 'resnet34'
 preprocess_input = sm.get_preprocessing(BACKBONE)
 
+augmentation_pipeline = A.Compose([
+    #A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+   #A.HorizontalFlip(p=0.5),
+    #A.VerticalFlip(p=0.5),
+    #A.Rotate(limit=30, p=0.5),
+    #A.ElasticTransform(p=0.5),
+    A.GridDistortion(num_steps=5, distort_limit=0.05, p=0.3),
+    A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
+    A.RandomBrightnessContrast(p=0.5),
+    A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH)  # Ensures that the dimensions remain the same
+])
 
 # Capture image and mask info
 image_paths = sorted(glob.glob(os.path.join(IMAGE_DIR, "*.png")))  # Sort to maintain order
@@ -107,16 +128,27 @@ y_val = np.expand_dims(y_val, axis=-1)
 dice_loss = sm.losses.DiceLoss()
 jaccard_loss = sm.losses.JaccardLoss()
 focal_loss = sm.losses.BinaryFocalLoss()
+#bce_loss = sm.losses.binary_crossentropy
 
 # Custom loss: Combine Focal, Jaccard, and Dice losses
-total_loss = dice_loss + jaccard_loss + focal_loss
+#total_loss = dice_loss + jaccard_loss + focal_loss
+total_loss = sm.losses.bce_dice_loss
+
+#total_loss = sm.binary_focal_dice_loss()
+#total_loss = sm.binary_focal_jaccard_loss()
+
 
 # Metrics (including Dice Score, IoU, and F-Score)
 metrics = [
     sm.metrics.IOUScore(threshold=0.5),   # Intersection over Union (IoU)
-    sm.metrics.FScore(threshold=0.5,beta=2),     # F-Score (beta=1, F1-score)
-    #sm.metrics.DiceScore(threshold=0.5)   # Dice Score
+    #sm.metrics.FScore(threshold=0.5,beta=2),     # F-Score (beta=1, F1-score)
+    sm.metrics.f1_score,
+    sm.metrics.f2_score,
+    sm.metrics.precision,
+    sm.metrics.recall, 
+    #sm.metrics.accuracy
 ]
+
 
 
 # Define and compile U-Net model
@@ -157,7 +189,27 @@ print(f"Model saved to {model_save_path}")
 plot_training_history(history, results_folder)
 
 # Call the function with the save path
-segment_and_save_results(results_folder, IMAGE_WIDTH, IMAGE_HEIGHT,
-                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
-                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+#segment_and_save_results(results_folder, IMAGE_WIDTH, IMAGE_HEIGHT,
+#                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
+#                        '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+#                        save_images=True)
+
+# Call the function with the save path
+'''
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                         test_image= './Dataset/test/images/PWH00200114920160113006P5.bmp',
+                        test_mask='./Dataset/test/masks/PWH00200114920160113006P5.png',
                         save_images=True)
+'''
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                        test_image=f'./Dataset/test/images/PWH00200114920160113006P5.bmp',
+                        test_mask=f'./Dataset/test/masks/PWH00200114920160113006P5.png',
+                        save_images=True)
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                        test_image=f'./Dataset/test/images/PWH00200114820160113005P5.bmp',
+                        test_mask=f'./Dataset/test/masks/PWH00200114820160113005P5.png',
+                        save_images=True)
+segment_and_save_results(save_path = results_folder, target_width = IMAGE_WIDTH, target_height= IMAGE_HEIGHT,
+                    test_image=f'./Dataset/test/images/PWH00200116320160115006P4.bmp',
+                    test_mask=f'./Dataset/test/masks/PWH00200116320160115006P4.png',
+                    save_images=True)

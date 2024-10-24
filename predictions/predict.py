@@ -15,6 +15,8 @@ def segment_and_save_results(save_path, target_width, target_height, test_image,
     SIZE_X = target_width #640 # 64 #320 # 640   # Width that the model expects
     SIZE_Y = target_height #3008 # 360 #1280 # 3008  # Height that the model expects
 
+    file_name = os.path.splitext(os.path.basename(test_image))[0]
+
     # Load the pre-trained model
     #model = keras.models.load_model('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46/best_model.keras', compile=False)
     model = keras.models.load_model(f'{save_path}/best_model.keras', compile=False)
@@ -112,10 +114,10 @@ def segment_and_save_results(save_path, target_width, target_height, test_image,
 
     # Save the images to the provided directory
     if save_images:
-        plt.imsave(os.path.join(save_path, 'original_image.jpg'), test_img)
-        plt.imsave(os.path.join(save_path, 'original_mask.jpg'), original_mask, cmap='gray')
-        plt.imsave(os.path.join(save_path, 'predicted_mask.jpg'), predicted_mask, cmap='gray')
-        plt.imsave(os.path.join(save_path, 'overlay_image.jpg'), overlay_image)
+        plt.imsave(os.path.join(save_path, f'{file_name}-original_image.jpg'), test_img)
+        plt.imsave(os.path.join(save_path, f'{file_name}-original_mask.jpg'), original_mask, cmap='gray')
+        plt.imsave(os.path.join(save_path, f'{file_name}-predicted_mask.jpg'), predicted_mask, cmap='gray')
+        plt.imsave(os.path.join(save_path, f'{file_name}-overlay_image.jpg'), overlay_image)
 
     # Evaluate the model on the test image and mask
     test_img_expanded = test_img_expanded.astype('float32')
@@ -135,7 +137,7 @@ def segment_and_save_results(save_path, target_width, target_height, test_image,
 
     # Save the loss figure to a file in the provided directory
     if save_images:
-        plt.savefig(os.path.join(save_path, 'test_loss.png'))  # Save loss plot
+        plt.savefig(os.path.join(save_path, f'{file_name}-test_loss.png'))  # Save loss plot
     plt.show()
 
     # Separate IoU and F-Score and plot them individually
@@ -147,35 +149,98 @@ def segment_and_save_results(save_path, target_width, target_height, test_image,
 
         # Save each metric figure individually
         if save_images:
-            plt.savefig(os.path.join(save_path, f'test_{metric_name.lower()}.png'))  # Save each metric plot
+            plt.savefig(os.path.join(save_path, f'{file_name}-test_{metric_name.lower()}.png'))  # Save each metric plot
         plt.show()
         
 
 if __name__ == '__main__':
+    target_width = 64
+    target_height = 320
+    model_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46"
+    test_image_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test"
     """
-    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-09-23_15-33-46',
-                             320, 1280, 
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114920160113006P5.bmp',
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114920160113006P5.png',
+    segment_and_save_results(model_path,
+                             target_width, target_height, 
+                             f'{test_image_path}/images/PWH00200114920160113006P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114920160113006P5.png',
                         True)
     """
     '''
-    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-10-11_10-34-23b',
-                             640, 3008, 
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200114820160113005P5.bmp',
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200114820160113005P5.png',
+    segment_and_save_results(model_path,
+                             target_width, target_height, 
+                             f'{test_image_path}/images/PWH00200114820160113005P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114820160113005P5.png',
                         True)
     segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/2024-10-11_10-34-23c',
                              640, 3008, 
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200116320160115006P4.bmp',
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200116320160115006P4.png',
+                             f'{test_image_path}/images/PWH00200116320160115006P4.bmp',
+                             f'{test_image_path}/masks/PWH00200116320160115006P4.png',
                         True)
     '''
-    
-    segment_and_save_results('/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Model/BATCH8-320hx64w-2024-10-12_19-50-36-5Over100',
-                             64, 320, 
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/images/PWH00200116320160115006P4.bmp',
-                             '/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test/masks/PWH00200116320160115006P4.png',
+
+    # Unet-Model 320x64
+    '''
+    target_width = 64
+    target_height = 320
+    model_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Model/BATCH8-320hx64w-2024-10-12_19-50-36-5Over100"
+    test_image_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test"
+    segment_and_save_results(model_path,
+                             target_width, target_height, 
+                             f'{test_image_path}/images/PWH00200114920160113006P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114920160113006P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200114820160113005P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114820160113005P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200116320160115006P4.bmp',
+                             f'{test_image_path}/masks/PWH00200116320160115006P4.png',
                         True)
     
     
+    # Resnet34-Model 320x64
+    target_width = 64
+    target_height = 320
+    model_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Model/BATCH8-320HX640W-2024-10-13_00-37-01-FINAL"
+    test_image_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test"
+    segment_and_save_results(model_path,
+                             target_width, target_height, 
+                             f'{test_image_path}/images/PWH00200114920160113006P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114920160113006P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200114820160113005P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114820160113005P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200116320160115006P4.bmp',
+                             f'{test_image_path}/masks/PWH00200116320160115006P4.png',
+                        True)
+    
+    # Resnet34-Model 320x64
+    '''
+    target_width = 640
+    target_height = 3008
+    model_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Results/Unet-Resnet34/BATCH4-3008Hx640W-EPOCHS100-2024-10-23_00-29-59"
+    test_image_path = "/Users/soterojrsaberon/SeriousAI/BonyStructureSegmentation/Dataset/test"
+    segment_and_save_results(model_path,
+                             target_width, target_height, 
+                             f'{test_image_path}/images/PWH00200114920160113006P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114920160113006P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200114820160113005P5.bmp',
+                             f'{test_image_path}/masks/PWH00200114820160113005P5.png',
+                        True)
+    segment_and_save_results(model_path,
+                              target_width, target_height,
+                             f'{test_image_path}/images/PWH00200116320160115006P4.bmp',
+                             f'{test_image_path}/masks/PWH00200116320160115006P4.png',
+                        True)
+     

@@ -21,8 +21,13 @@ def plot_training_history(history, results_folder):
     # Plot training & validation loss values
     plt.figure(figsize=(12, 6))
 
-    if 'history' in history.keys():
-        history = history['history']
+    if hasattr(history, 'keys'): # 'history' in history.keys():
+        history = history
+    elif hasattr(history, 'history'): # 'history' in history.values()
+        history = history.history
+    else:
+        print("Invalid history data. Please provide a valid history dictionary.")
+        return
 
     # Loss
     plt.subplot(1, 2, 1)
@@ -39,11 +44,17 @@ def plot_training_history(history, results_folder):
         plt.plot(history['iou_score'], label='Training IoU')
         plt.plot(history['val_iou_score'], label='Validation IoU')
     if 'f1-score' in history:
-        plt.plot(history['f1-score'], label='Training F-Score')
-        plt.plot(history['val_f1-score'], label='Validation F-Score')
+        plt.plot(history['f1-score'], label='Training F1-Score')
+        plt.plot(history['val_f1-score'], label='Validation F1-Score')
     if 'f2-score' in history:
-        plt.plot(history['f2-score'], label='Training F-Score')
-        plt.plot(history['val_f2-score'], label='Validation F-Score')
+        plt.plot(history['f2-score'], label='Training F2-Score')
+        plt.plot(history['val_f2-score'], label='Validation F2-Score')
+    if 'precision' in history:
+        plt.plot(history['precision'], label='Training Precision')
+        plt.plot(history['val_precision'], label='Validation Precision')
+    if 'recall' in history:
+        plt.plot(history['recall'], label='Training Recall')
+        plt.plot(history['val_recall'], label='Validation Recall')
     plt.title('Metrics (IoU / F-Score)')
     plt.ylabel('Score')
     plt.xlabel('Epoch')
@@ -58,7 +69,7 @@ def plot_training_history(history, results_folder):
 
 
     # Optionally save the training logs (history) to a text file
-    history_save_path = os.path.join(results_folder, 'training_history2.txt')
+    history_save_path = os.path.join(results_folder, 'training_history.txt')
     with open(history_save_path, 'w') as f:
         for key in history.keys():
             f.write(f"{key}: {history[key]}\n")
